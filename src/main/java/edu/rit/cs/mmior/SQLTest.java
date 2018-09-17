@@ -13,16 +13,28 @@ class SQLTest {
         String username = console.readLine("Username: ");
         String password = new String(console.readPassword("Password: "));
 
+        Connection con = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
         try {
-            Connection con = DriverManager.getConnection("jdbc:postgresql://reddwarf.cs.rit.edu/", username, password);
-            Statement stmt = con.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT sales_city FROM foodmart.region WHERE sales_city != 'None';");
+            con = DriverManager.getConnection("jdbc:postgresql://reddwarf.cs.rit.edu/", username, password);
+            stmt = con.createStatement();
+            rs = stmt.executeQuery("SELECT sales_city FROM foodmart.region WHERE sales_city != 'None';");
             while (rs.next()) {
                 System.out.println(rs.getString(1));
             }
             con.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.err.println("Something went wrong.");
+        } finally {
+            try {
+                if (rs != null) { rs.close(); }
+                if (stmt != null) { stmt.close(); }
+                if (con != null) { con.close(); }
+            } catch (SQLException e) {
+                System.err.println("Something went REALLY wrong.");
+            }
         }
     }
 }
