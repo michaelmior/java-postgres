@@ -36,7 +36,7 @@ class SQLTest {
         try {
             con = DriverManager.getConnection("jdbc:postgresql://" + host + ":" + port + "/?currentSchema=foodmart", username, password);
             stmt = con.createStatement();
-            rs = stmt.executeQuery("SELECT sales_city FROM region WHERE sales_city != 'None';");
+            rs = stmt.executeQuery("SELECT sales_city FROM region;");
             while (rs.next()) {
                 System.out.println(rs.getString(1));
             }
