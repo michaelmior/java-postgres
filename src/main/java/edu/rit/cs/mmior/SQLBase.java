@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -37,5 +39,18 @@ class SQLBase {
             url += "/?currentSchema=" + schema;
         }
         return DriverManager.getConnection(url, username, password);
+    }
+
+    public static ResultSet executeQuery(Connection con, String sql) throws SQLException {
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = con.createStatement();
+            rs = stmt.executeQuery(sql);
+            stmt.closeOnCompletion();
+        } catch (SQLException e) {
+            System.err.println("Something went wrong.");
+        }
+        return rs;
     }
 }
