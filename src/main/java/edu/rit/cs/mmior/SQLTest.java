@@ -12,7 +12,7 @@ class SQLTest extends SQLBase {
         Statement stmt = null;
         ResultSet rs = null;
         try {
-            con = getConnection();
+            con = getConnection("foodmart");
             stmt = con.createStatement();
             rs = stmt.executeQuery("SELECT sales_city FROM region;");
             while (rs.next()) {

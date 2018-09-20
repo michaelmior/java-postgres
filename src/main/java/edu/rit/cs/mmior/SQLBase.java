@@ -9,6 +9,10 @@ import java.util.Scanner;
 
 class SQLBase {
     public static Connection getConnection() throws SQLException {
+        return getConnection(null);
+    }
+
+    public static Connection getConnection(String schema) throws SQLException {
         // Read the password file
         // should be ~/.pgpass and look like
         // reddwarf.cs.rit.edu:5432:USERNAME:USERNAME:PASSWORD
@@ -28,6 +32,10 @@ class SQLBase {
         String username = parts[2];
         String password = parts[4];
 
-        return DriverManager.getConnection("jdbc:postgresql://" + host + ":" + port + "/?currentSchema=foodmart", username, password);
+        String url = "jdbc:postgresql://" + host + ":" + port;
+        if (schema != null) {
+            url += "/?currentSchema=" + schema;
+        }
+        return DriverManager.getConnection(url, username, password);
     }
 }
