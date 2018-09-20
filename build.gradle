@@ -4,13 +4,14 @@ apply plugin: 'application'
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-mainClassName = 'edu.cs.rit.mmior.SQLTest'
+mainClassName = 'edu.cs.rit.mmior.' + (findProperty('mainClass') ?: 'SQLTest')
 
 repositories {
   mavenCentral()
 }
 
 dependencies {
+  compile group: 'io.codearte.jfairy', name: 'jfairy', version: '0.5.9'
   compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
 }
 
