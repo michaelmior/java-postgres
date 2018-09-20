@@ -8,11 +8,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.DateProducer;
 import io.codearte.jfairy.producer.person.Person;
 import io.codearte.jfairy.producer.text.TextProducer;
+
+import me.tongfei.progressbar.ProgressBar;
 
 import org.joda.time.DateTime;
 
@@ -95,7 +98,7 @@ class SQLFake extends SQLBase {
         Fairy fairy = Fairy.create();
 
         List<String> doctors = new ArrayList<>(NUM_DOCTORS);
-        try {
+        try (ProgressBar pb = new ProgressBar("Doctors", NUM_DOCTORS)) {
             PreparedStatement ps = con.prepareStatement("INSERT INTO Doctor VALUES (?, ?, ?, ?, ?)");
             for (int i = 0; i < NUM_DOCTORS; i++) {
                 Person doctor = fairy.person();
@@ -114,6 +117,7 @@ class SQLFake extends SQLBase {
                 ps.execute();
                 ps.clearParameters();
                 doctors.add(ssn);
+                pb.step();
             }
         } catch (SQLException e) {
             System.err.println("Error adding doctors.");
@@ -121,7 +125,7 @@ class SQLFake extends SQLBase {
         }
 
         List<String> patients = new ArrayList<>(NUM_PATIENTS);
-        try {
+        try (ProgressBar pb = new ProgressBar("Patients", NUM_PATIENTS)) {
             PreparedStatement ps = con.prepareStatement("INSERT INTO Patient VALUES (?, ?, ?, ?, ?)");
             for (int i = 0; i < NUM_PATIENTS; i++) {
                 Person patient = fairy.person();
@@ -139,13 +143,14 @@ class SQLFake extends SQLBase {
                 ps.execute();
                 ps.clearParameters();
                 patients.add(ssn);
+                pb.step();
             }
         } catch (SQLException e) {
             System.err.println("Error adding patients.");
             System.exit(1);
         }
 
-        try {
+        try (ProgressBar pb = new ProgressBar("Visits", NUM_VISITS)) {
             PreparedStatement ps = con.prepareStatement("INSERT INTO Visit VALUES (?, ?, ?, ?, ?, ?, ?)");
             DateProducer dp = fairy.dateProducer();
             TextProducer tp = fairy.textProducer();
@@ -168,11 +173,11 @@ class SQLFake extends SQLBase {
 
                 ps.execute();
                 ps.clearParameters();
+                pb.step();
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-            // System.err.println("Error adding visits.");
-            // System.exit(1);
+            System.err.println("Error adding visits.");
+            System.exit(1);
         }
     }
 

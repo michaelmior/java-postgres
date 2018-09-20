@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
   compile group: 'io.codearte.jfairy', name: 'jfairy', version: '0.5.9'
+  compile group: 'me.tongfei', name: 'progressbar', version: '0.7.1'
   compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
 }
 
