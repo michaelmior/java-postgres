@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 import io.codearte.jfairy.Fairy;
@@ -26,9 +27,15 @@ class SQLFake extends SQLBase {
         "  firstName VARCHAR(75) NOT NULL," +
         "  lastName VARCHAR(75) NOT NULL," +
         "  salary FLOAT NOT NULL," +
-        "  supervisor CHARACTER(9)," +
-        "  PRIMARY KEY (ssn)," +
-        "  FOREIGN KEY (supervisor) REFERENCES Doctor(ssn));";
+        "  PRIMARY KEY (ssn));";
+
+    static final String CREATE_SUPERVISEDBY_TABLE =
+        "CREATE TABLE SupervisedBy (" +
+        "  supervisor CHAR(9)," +
+        "  supervisee CHAR(9)," +
+        "  PRIMARY KEY (supervisor, supervisee)," +
+        "  FOREIGN KEY (supervisor) REFERENCES Doctor(ssn)," +
+        "  FOREIGN KEY (supervisee) REFERENCES Doctor(ssn));";
 
     static final String CREATE_PATIENT_TABLE =
         "CREATE TABLE Patient (" +
@@ -57,6 +64,8 @@ class SQLFake extends SQLBase {
     static final float DOCTOR_MIN_SALARY = 100000;
     static final float DOCTOR_PCT_SUPERVISED = 0.95f;
 
+    static final int SUPERIVISORS_PER_DOC = 2;
+
     static final int NUM_PATIENTS = 1000;
     static final float PATIENT_PCT_MIDDLE = 0.6f;
 
@@ -80,8 +89,9 @@ class SQLFake extends SQLBase {
         try {
             con = getConnection("hospital");
             stmt = con.createStatement();
-            stmt.execute("DROP TABLE IF EXISTS Doctor, Patient, Visit");
+            stmt.execute("DROP TABLE IF EXISTS Doctor, SupervisedBy, Patient, Visit");
             stmt.execute(CREATE_DOCTOR_TABLE);
+            stmt.execute(CREATE_SUPERVISEDBY_TABLE);
             stmt.execute(CREATE_PATIENT_TABLE);
             stmt.execute(CREATE_VISIT_TABLE);
         } catch (SQLException e) {
@@ -99,7 +109,8 @@ class SQLFake extends SQLBase {
 
         List<String> doctors = new ArrayList<>(NUM_DOCTORS);
         try (ProgressBar pb = new ProgressBar("Doctors", NUM_DOCTORS)) {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO Doctor VALUES (?, ?, ?, ?, ?)");
+            PreparedStatement ps = con.prepareStatement("INSERT INTO Doctor VALUES (?, ?, ?, ?)");
+            PreparedStatement ps2 = con.prepareStatement("INSERT INTO SupervisedBy VALUES (?, ?)");
             for (int i = 0; i < NUM_DOCTORS; i++) {
                 Person doctor = fairy.person();
                 String ssn = doctor.getNationalIdentityCardNumber().replace("-", "");
@@ -108,14 +119,25 @@ class SQLFake extends SQLBase {
                 ps.setString(3, doctor.getLastName());
                 ps.setFloat(4, floatBetween(DOCTOR_MIN_SALARY, DOCTOR_MAX_SALARY));
 
-                if (Math.random() > DOCTOR_PCT_SUPERVISED || doctors.isEmpty()) {
-                    ps.setString(5, null);
-                } else {
-                    ps.setString(5, doctors.get((int) (Math.random() * (i - 1))));
-                }
-
                 ps.execute();
                 ps.clearParameters();
+
+                if (Math.random() < DOCTOR_PCT_SUPERVISED && doctors.size() >= SUPERIVISORS_PER_DOC) {
+                    IntStream ints = ThreadLocalRandom.current().ints(0, i).distinct();
+                    ints = ints.limit((int) Math.ceil(Math.random() * SUPERIVISORS_PER_DOC));
+                    ints.forEach((int j) -> {
+                        try {
+                            ps2.setString(1, doctors.get(j));
+                            ps2.setString(2, ssn);
+                            ps2.execute();
+                            ps2.clearParameters();
+                        } catch (SQLException e) {
+                            System.err.println("Error creating supervisor relationship.");
+                            System.exit(1);
+                        }
+                    });
+                }
+
                 doctors.add(ssn);
                 pb.step();
             }
