@@ -27,6 +27,7 @@ class SQLFake extends SQLBase {
         "  firstName VARCHAR(75) NOT NULL," +
         "  lastName VARCHAR(75) NOT NULL," +
         "  salary FLOAT NOT NULL," +
+        "  dob DATE NOT NULL," +
         "  PRIMARY KEY (ssn));";
 
     static final String CREATE_SUPERVISEDBY_TABLE =
@@ -43,6 +44,7 @@ class SQLFake extends SQLBase {
         "  firstName VARCHAR(75) NOT NULL," +
         "  middleName VARCHAR(75)," +
         "  lastName VARCHAR(75) NOT NULL," +
+        "  dob DATE NOT NULL," +
         "  primaryDoctor CHARACTER(9)," +
         "  PRIMARY KEY (ssn)," +
         "  FOREIGN KEY (primaryDoctor) REFERENCES Doctor(ssn));";
@@ -109,7 +111,7 @@ class SQLFake extends SQLBase {
 
         List<String> doctors = new ArrayList<>(NUM_DOCTORS);
         try (ProgressBar pb = new ProgressBar("Doctors", NUM_DOCTORS)) {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO Doctor VALUES (?, ?, ?, ?)");
+            PreparedStatement ps = con.prepareStatement("INSERT INTO Doctor VALUES (?, ?, ?, ?, ?)");
             PreparedStatement ps2 = con.prepareStatement("INSERT INTO SupervisedBy VALUES (?, ?)");
             for (int i = 0; i < NUM_DOCTORS; i++) {
                 Person doctor = fairy.person();
@@ -118,6 +120,7 @@ class SQLFake extends SQLBase {
                 ps.setString(2, doctor.getFirstName());
                 ps.setString(3, doctor.getLastName());
                 ps.setFloat(4, floatBetween(DOCTOR_MIN_SALARY, DOCTOR_MAX_SALARY));
+                ps.setDate(5, new java.sql.Date(doctor.getDateOfBirth().getMillis()));
 
                 ps.execute();
                 ps.clearParameters();
@@ -148,7 +151,7 @@ class SQLFake extends SQLBase {
 
         List<String> patients = new ArrayList<>(NUM_PATIENTS);
         try (ProgressBar pb = new ProgressBar("Patients", NUM_PATIENTS)) {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO Patient VALUES (?, ?, ?, ?, ?)");
+            PreparedStatement ps = con.prepareStatement("INSERT INTO Patient VALUES (?, ?, ?, ?, ?, ?)");
             for (int i = 0; i < NUM_PATIENTS; i++) {
                 Person patient = fairy.person();
                 String ssn = patient.getNationalIdentityCardNumber().replace("-", "");
@@ -160,7 +163,8 @@ class SQLFake extends SQLBase {
                     ps.setString(3, null);
                 }
                 ps.setString(4, patient.getLastName());
-                ps.setString(5, doctors.get((int) (Math.random() * NUM_DOCTORS)));
+                ps.setDate(5, new java.sql.Date(patient.getDateOfBirth().getMillis()));
+                ps.setString(6, doctors.get((int) (Math.random() * NUM_DOCTORS)));
 
                 ps.execute();
                 ps.clearParameters();
