@@ -10,7 +10,7 @@ For generating test data, some programs also make use of the [JFairy](https://ww
 
 The repository contains several different programs.
 By default the program `SQLTest` is run.
-To run another program, execute `./gradlew -PmainClass=PROGRAM_NAME`.
+To run another program, execute `./gradlew run -PmainClass=PROGRAM_NAME`.
 
 | Program   | Description                                      |
 |-----------|--------------------------------------------------|
